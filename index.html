@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Trading Journal Pro - Template 3 Lembar</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/fontsource-inter@5.0.0/index.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <!-- Header -->
+    <header class="header animate-in">
+        <div>
+            <h1>📊 Trading Journal Pro</h1>
+            <p class="header-subtitle">Template 3 Lembar - Trade Log, Dashboard, Checklist</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-primary" onclick="openAddTradeModal()">
+                <span>➕</span> Tambah Trade
+            </button>
+            <button class="btn btn-secondary" onclick="exportData()">
+                <span>📥</span> Export JSON
+            </button>
+            <button class="btn btn-secondary" onclick="exportCSV()">
+                <span>📊</span> Export CSV
+            </button>
+            <button class="btn btn-secondary" onclick="importData()">
+                <span>📤</span> Import
+            </button>
+            <button class="btn btn-danger" onclick="clearAllData()">
+                <span>🗑️</span> Reset
+            </button>
+        </div>
+    </header>
+
+    <!-- Tabs -->
+    <div class="tabs animate-in">
+        <div class="tab active" onclick="switchTab('trade-log', this)">
+            <span class="tab-icon">📋</span>Trade Log
+        </div>
+        <div class="tab" onclick="switchTab('dashboard', this)">
+            <span class="tab-icon">📈</span>Dashboard
+        </div>
+        <div class="tab" onclick="switchTab('checklist', this)">
+            <span class="tab-icon">✅</span>Checklist Pre-Trade
+        </div>
+    </div>
+
+    <!-- Tab 1: Trade Log -->
+    <div id="trade-log" class="tab-content active">
+        <div class="card animate-in">
+            <div class="filter-bar">
+                <input type="text" class="filter-input" placeholder="🔍 Cari Trade ID..." id="searchTrade" onkeyup="filterTrades()">
+                <select class="filter-input" id="filterPair" onchange="filterTrades()">
+                    <option value="">Semua Pair</option>
+                    <option value="EUR/USD">EUR/USD</option>
+                    <option value="GBP/USD">GBP/USD</option>
+                    <option value="GBP/JPY">GBP/JPY</option>
+                    <option value="XAU/USD">XAU/USD</option>
+                    <option value="BTC/USD">BTC/USD</option>
+                    <option value="USD/JPY">USD/JPY</option>
+                </select>
+                <select class="filter-input" id="filterDirection" onchange="filterTrades()">
+                    <option value="">Semua Arah</option>
+                    <option value="BUY">BUY</option>
+                    <option value="SELL">SELL</option>
+                </select>
+                <select class="filter-input" id="filterResult" onchange="filterTrades()">
+                    <option value="">Semua Hasil</option>
+                    <option value="win">Profit</option>
+                    <option value="loss">Loss</option>
+                </select>
+            </div>
+
+            <div class="table-container">
+                <table id="tradeTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tanggal</th>
+                            <th>Pair</th>
+                            <th>Arah</th>
+                            <th>Strategy</th>
+                            <th>Entry</th>
+                            <th>SL</th>
+                            <th>TP</th>
+                            <th>Lot</th>
+                            <th>Risk (IDR)</th>
+                            <th>Risk (%)</th>
+                            <th>RRR</th>
+                            <th>P/L (IDR)</th>
+                            <th>R-Mult</th>
+                            <th>Emosi</th>
+                            <th>Checklist</th>
+                            <th>Catatan</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tradeTableBody">
+                        <!-- Data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">📝</div>
+                <div class="empty-state-title">Belum ada trade tercatat</div>
+                <p>Klik tombol "Tambah Trade" untuk mencatat trade pertama Anda</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 2: Dashboard -->
+    <div id="dashboard" class="tab-content">
+        <!-- KPI Cards -->
+        <div class="kpi-grid animate-in">
+            <div class="kpi-card">
+                <div class="kpi-label">📊 Total Trade</div>
+                <div class="kpi-value neutral" id="kpiTotalTrades">0</div>
+                <div class="kpi-change">Semua waktu</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">🎯 Win Rate</div>
+                <div class="kpi-value neutral" id="kpiWinRate">0%</div>
+                <div class="kpi-change" id="kpiWinRateChange">Target: >45%</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">💰 Total P/L</div>
+                <div class="kpi-value neutral" id="kpiTotalPL">Rp 0</div>
+                <div class="kpi-change">Kumulatif</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">⚠️ Avg Risk %</div>
+                <div class="kpi-value neutral" id="kpiAvgRisk">0%</div>
+                <div class="kpi-change" id="kpiAvgRiskChange">Target: ≤1%</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">📈 Profit Factor</div>
+                <div class="kpi-value neutral" id="kpiProfitFactor">0</div>
+                <div class="kpi-change" id="kpiProfitFactorChange">Target: >1.5</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">✅ Kepatuhan</div>
+                <div class="kpi-value neutral" id="kpiCompliance">0%</div>
+                <div class="kpi-change" id="kpiComplianceChange">Target: >90%</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">🎲 Expectancy</div>
+                <div class="kpi-value neutral" id="kpiExpectancy">Rp 0</div>
+                <div class="kpi-change">Per trade</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">📉 Max Drawdown</div>
+                <div class="kpi-value negative" id="kpiMaxDrawdown">0%</div>
+                <div class="kpi-change">Terbesar</div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid animate-in">
+            <div class="chart-container">
+                <div class="chart-title">📈 Equity Curve</div>
+                <canvas id="equityChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <div class="chart-title">🥧 Distribusi Emosi</div>
+                <canvas id="emotionChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <div class="chart-title">📊 Performance per Strategy</div>
+                <canvas id="strategyChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <div class="chart-title">🎯 Risk vs R-Multiple</div>
+                <canvas id="riskScatterChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <div class="chart-title">📅 Win/Loss per Hari</div>
+                <canvas id="dayChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <div class="chart-title">⏰ Performance per Sesi</div>
+                <canvas id="sessionChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Weekly Summary -->
+        <div class="card animate-in" style="margin-top: 24px;">
+            <div class="card-title">
+                <span class="card-title-icon" style="background: var(--gradient-1);">📋</span>
+                Ringkasan Mingguan
+            </div>
+            <div class="stats-summary">
+                <div class="stat-item">
+                    <div class="stat-value" id="weekTrades" style="color: var(--primary);">0</div>
+                    <div class="stat-label">Trade Minggu Ini</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="weekWinRate" style="color: var(--success);">0%</div>
+                    <div class="stat-label">Win Rate Minggu Ini</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="weekPL" style="color: var(--text-primary);">Rp 0</div>
+                    <div class="stat-label">P/L Minggu Ini</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="weekBestPair" style="color: var(--warning);">-</div>
+                    <div class="stat-label">Pair Terbaik</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 3: Checklist -->
+    <div id="checklist" class="tab-content">
+        <div class="card animate-in">
+            <div class="alert alert-warning">
+                <span>⚠️</span>
+                <div>
+                    <strong>Peringatan:</strong> Centang SEMUA sebelum entry. Jika ada yang tidak tercentang → BATALKAN TRADE
+                </div>
+            </div>
+
+            <div class="checklist-grid">
+                <!-- Analisis Teknis -->
+                <div class="checklist-section">
+                    <div class="checklist-section-title">
+                        <span>📊</span> Analisis Teknis
+                    </div>
+                    <div class="checklist-item">
+                        <div class="checklist-checkbox" onclick="toggleChecklist(this, 'teknis1')"></div>
+                        <div class="checklist-label">Setup sesuai strategy yang sudah di-backtest</div>
+                    </div>
+                    <div class="checklist-item">
+                        <div class="checklist-checkbox" onclick="toggleChecklist(this, 'teknis2')"></div>
+                        <div class="checklist-label">Konfirmasi minimal 2 indikator/price action</div>
+                    </div>
+                    <div class="checklist-item">
+                        <div class="checklist-checkbox" onclick="toggleChecklist(this, 'teknis3')"></div>
+                        <div class="checklist-label">RRR minimal 1:2 (hitung sebelum entry!)</div>
+                    </div>
+                    <div class="checklist-item">
+                        <div class="checklist-checkbox" onclick="toggleChecklist(this, 'teknis4')"></div>
+                        <div class="checklist-label">SL ditempatkan di level teknis valid</div>
+                    </div>
+                </div>
+
+                <!-- Manajemen Risiko -->
+                <div class="checklist-section">
+                    <div class="checklist-section-title">
+                        <span>💰</span> Manajemen Risiko
+                    </div>
+                    <div class="checklist-item">
+                        <div class="checklist-checkbox" onclick="toggleChecklist(this, 'risiko1')"></div>
+                        <div class="checklist-label">Risk ≤ 1% dari saldo akun saat ini</div>
+                    </div>
+                    <div class="checklist-item">
+                        <div class="checklist-checkbox" onclick="toggleChecklist(this, 'risiko2')"></div>
+                        <div class="checklist-label">Lot size dihitung dengan position size calculator</div>
+                    </div>
+                    <div class="checklist-item">
+                        <div class="checklist-checkbox" onclick="toggleChecklist(this, 'risiko3')"></div>
+                        <div class="checklist-label">Tidak ada trade lain dengan korelasi tinggi</div>
+                    </div>
+                    <div class="checklist-item">
+                        <div class="checklist-checkbox" onclick="toggleChecklist(this, 'risiko4')"></div>
+                        <div class="checklist-label">Total risk harian belum melebihi 3%</div>
+                    </div>
+                </div>
+
+                <!-- Konteks Market -->
+                <div class="checklist-section">
+                    <div class="checklist-section-title">
+                        <span>🌍</span> Konteks Market
+                    </div>
+                    <div class="checklist-item">
+                        <div class="checklist-checkbox" onclick="toggleChecklist(this, 'market1')"></div>
+                        <div class="checklist-label">Tidak ada berita high-impact dalam 30 menit</div>
+                    </div>
+                    <div class="checklist-item">
+                        <div class="checklist-checkbox" onclick="toggleChecklist(this, 'market2')"></div>
+                        <div class="checklist-label">Spread normal (tidak melebar)</div>
+                    </div>
+                    <div class="checklist-item">
+                        <div class="checklist-checkbox" onclick="toggleChecklist(this, 'market3')"></div>
+                        <div class="checklist-label">Likuiditas memadai</div>
+                    </div>
+                </div>
+
+                <!-- Psikologi -->
+                <div class="checklist-section">
+                    <div class="checklist-section-title">
+                        <span>🧠</span> Psikologi Trader
+                    </div>
+                    <div class="checklist-item">
+                        <div class="checklist-checkbox" onclick="toggleChecklist(this, 'psiko1')"></div>
+                        <div class="checklist-label">Emosi stabil: tidak FOMO, revenge, atau serakah</div>
+                    </div>
+                    <div class="checklist-item">
+                        <div class="checklist-checkbox" onclick="toggleChecklist(this, 'psiko2')"></div>
+                        <div class="checklist-label">Sudah istirahat cukup, tidak trading saat lelah</div>
+                    </div>
+                    <div class="checklist-item">
+                        <div class="checklist-checkbox" onclick="toggleChecklist(this, 'psiko3')"></div>
+                        <div class="checklist-label">Menerima kemungkinan loss sebelum entry</div>
+                    </div>
+                    <div class="checklist-item">
+                        <div class="checklist-checkbox" onclick="toggleChecklist(this, 'psiko4')"></div>
+                        <div class="checklist-label">Fokus pada proses, bukan hasil trade ini</div>
+                    </div>
+                </div>
+
+                <!-- Administrasi -->
+                <div class="checklist-section">
+                    <div class="checklist-section-title">
+                        <span>📋</span> Administrasi
+                    </div>
+                    <div class="checklist-item">
+                        <div class="checklist-checkbox" onclick="toggleChecklist(this, 'admin1')"></div>
+                        <div class="checklist-label">Screenshot chart sebelum entry</div>
+                    </div>
+                    <div class="checklist-item">
+                        <div class="checklist-checkbox" onclick="toggleChecklist(this, 'admin2')"></div>
+                        <div class="checklist-label">Catatan entry sudah ditulis di jurnal</div>
+                    </div>
+                    <div class="checklist-item">
+                        <div class="checklist-checkbox" onclick="toggleChecklist(this, 'admin3')"></div>
+                        <div class="checklist-label">Alarm/reminder untuk monitor trade sudah diset</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="checklist-progress">
+                <div style="font-size: 14px; color: var(--text-secondary);">Progress Kelengkapan</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="checklistProgress" style="width: 0%;"></div>
+                </div>
+                <div style="font-size: 24px; font-weight: 700;" id="checklistPercentage">0%</div>
+                <div style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">
+                    <span id="checklistCount">0</span> dari 18 item tercentang
+                </div>
+                <div class="trade-status not-ready" id="tradeStatus">
+                    ❌ BATALKAN TRADE - Checklist Belum Lengkap
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-success" id="btnProceedTrade" style="display: none; margin: 0 auto;" onclick="proceedToTrade()">
+                    ✅ SEMUA LENGKAP - LANJUTKAN ENTRY
+                </button>
+            </div>
+        </div>
+
+        <!-- Tips Section -->
+        <div class="card animate-in">
+            <div class="card-title">
+                <span class="card-title-icon" style="background: var(--gradient-2);">💡</span>
+                Tips Penggunaan
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+                <div style="background: var(--bg-input); padding: 16px; border-radius: 12px; border: 1px solid var(--border);">
+                    <div style="font-weight: 600; margin-bottom: 8px;">🌅 Pagi (Pre-Market)</div>
+                    <div style="font-size: 13px; color: var(--text-secondary);">Buka Checklist, review kondisi market, update saldo akun</div>
+                </div>
+                <div style="background: var(--bg-input); padding: 16px; border-radius: 12px; border: 1px solid var(--border);">
+                    <div style="font-weight: 600; margin-bottom: 8px;">⚡ Saat Entry</div>
+                    <div style="font-size: 13px; color: var(--text-secondary);">Input data Trade Log, pilih emosi, centang checklist</div>
+                </div>
+                <div style="background: var(--bg-input); padding: 16px; border-radius: 12px; border: 1px solid var(--border);">
+                    <div style="font-weight: 600; margin-bottom: 8px;">🌙 Setelah Close</div>
+                    <div style="font-size: 13px; color: var(--text-secondary);">Isi harga exit, P/L auto-calc, tulis pelajaran</div>
+                </div>
+                <div style="background: var(--bg-input); padding: 16px; border-radius: 12px; border: 1px solid var(--border);">
+                    <div style="font-weight: 600; margin-bottom: 8px;">🗓️ Mingguan</div>
+                    <div style="font-size: 13px; color: var(--text-secondary);">Buka Dashboard, evaluasi performa, update rule</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Trade Modal -->
+<div class="modal" id="addTradeModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 style="font-size: 20px;">➕ Tambah Trade Baru</h2>
+            <button class="modal-close" onclick="closeAddTradeModal()">×</button>
+        </div>
+        <form id="addTradeForm" onsubmit="saveTrade(event)">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Tanggal Entry</label>
+                    <input type="datetime-local" class="form-input" id="tradeDate" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Pair</label>
+                    <select class="form-select" id="tradePair" required>
+                        <option value="">Pilih Pair</option>
+                        <option value="EUR/USD">EUR/USD</option>
+                        <option value="GBP/USD">GBP/USD</option>
+                        <option value="GBP/JPY">GBP/JPY</option>
+                        <option value="XAU/USD">XAU/USD (Gold)</option>
+                        <option value="BTC/USD">BTC/USD</option>
+                        <option value="USD/JPY">USD/JPY</option>
+                        <option value="AUD/USD">AUD/USD</option>
+                        <option value="USD/CAD">USD/CAD</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Arah</label>
+                    <select class="form-select" id="tradeDirection" required>
+                        <option value="">Pilih Arah</option>
+                        <option value="BUY">BUY 📈</option>
+                        <option value="SELL">SELL 📉</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Strategy</label>
+                    <select class="form-select" id="tradeStrategy" required>
+                        <option value="">Pilih Strategy</option>
+                        <option value="Breakout">Breakout</option>
+                        <option value="Pullback">Pullback</option>
+                        <option value="Reversal">Reversal</option>
+                        <option value="Scalping">Scalping</option>
+                        <option value="News">News Trading</option>
+                        <option value="Range">Range Trading</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Timeframe</label>
+                    <select class="form-select" id="tradeTimeframe">
+                        <option value="M5">M5</option>
+                        <option value="M15">M15</option>
+                        <option value="H1" selected>H1</option>
+                        <option value="H4">H4</option>
+                        <option value="D1">D1</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Sesi Trading</label>
+                    <select class="form-select" id="tradeSession">
+                        <option value="Asia">Asia</option>
+                        <option value="London">London</option>
+                        <option value="New York">New York</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Harga Entry</label>
+                    <input type="number" step="0.00001" class="form-input" id="tradeEntry" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Stop Loss</label>
+                    <input type="number" step="0.00001" class="form-input" id="tradeSL" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Take Profit</label>
+                    <input type="number" step="0.00001" class="form-input" id="tradeTP" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Lot Size</label>
+                    <input type="number" step="0.01" class="form-input" id="tradeLot" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Saldo Akun (IDR)</label>
+                    <input type="number" class="form-input" id="tradeBalance" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Emosi Sebelum</label>
+                    <select class="form-select" id="tradeEmotionBefore" required>
+                        <option value="">Pilih Emosi</option>
+                        <option value="Tenang">Tenang 😌</option>
+                        <option value="FOMO">FOMO 😰</option>
+                        <option value="Serakah">Serakah 🤑</option>
+                        <option value="Takut">Takut 😨</option>
+                        <option value="Revenge">Revenge 😡</option>
+                        <option value="Lelah">Lelah 😴</option>
+                        <option value="Excited">Excited 🎉</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 16px;">
+                <label class="form-label">Catatan Entry</label>
+                <textarea class="form-input" id="tradeNotes" rows="3" placeholder="Alasan entry, konfirmasi sinyal, dll..."></textarea>
+            </div>
+
+            <!-- Auto-calculated fields preview -->
+            <div class="card" style="margin-top: 20px; background: var(--bg-input);">
+                <div class="card-title" style="font-size: 15px;">
+                    <span></span> Perhitungan Otomatis
+                </div>
+                <div class="stats-summary">
+                    <div class="stat-item">
+                        <div class="stat-value" id="calcRiskPip">0</div>
+                        <div class="stat-label">Risk (Pip)</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="calcRiskIDR" style="color: var(--danger);">Rp 0</div>
+                        <div class="stat-label">Risk (IDR)</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="calcRiskPercent" style="color: var(--warning);">0%</div>
+                        <div class="stat-label">Risk (%)</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="calcRRR" style="color: var(--success);">0</div>
+                        <div class="stat-label">RRR</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button type="button" class="btn btn-secondary" onclick="closeAddTradeModal()" style="flex: 1;">
+                    Batal
+                </button>
+                <button type="submit" class="btn btn-primary" style="flex: 1;">
+                    💾 Simpan Trade
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Trade Modal -->
+<div class="modal" id="editTradeModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 style="font-size: 20px;">✏️ Edit Trade</h2>
+            <button class="modal-close" onclick="closeEditTradeModal()">×</button>
+        </div>
+        <form id="editTradeForm" onsubmit="updateTrade(event)">
+            <input type="hidden" id="editTradeId">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Harga Exit</label>
+                    <input type="number" step="0.00001" class="form-input" id="editExit" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Emosi Sesudah</label>
+                    <select class="form-select" id="editEmotionAfter" required>
+                        <option value="">Pilih Emosi</option>
+                        <option value="Tenang">Tenang 😌</option>
+                        <option value="Puas">Puas 😊</option>
+                        <option value="Kecewa">Kecewa 😞</option>
+                        <option value="Netral">Netral 😐</option>
+                        <option value="FOMO">FOMO 😰</option>
+                        <option value="Serakah">Serakah 🤑</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Checklist Terpenuhi?</label>
+                    <select class="form-select" id="editChecklist" required>
+                        <option value="yes">✅ Ya</option>
+                        <option value="no">❌ Tidak</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Deviasi Rencana</label>
+                    <select class="form-select" id="editDeviation">
+                        <option value="Tidak Ada">Tidak Ada</option>
+                        <option value="SL Dipindah">SL Dipindah</option>
+                        <option value="TP Dipotong">TP Dipotong</option>
+                        <option value="Early Exit">Early Exit</option>
+                        <option value="Overlot">Overlot</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" style="margin-top: 16px;">
+                <label class="form-label">Catatan Review</label>
+                <textarea class="form-input" id="editReviewNotes" rows="3" placeholder="Pelajaran, apa yang diubah next time..."></textarea>
+            </div>
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button type="button" class="btn btn-secondary" onclick="closeEditTradeModal()" style="flex: 1;">
+                    Batal
+                </button>
+                <button type="submit" class="btn btn-primary" style="flex: 1;">
+                    💾 Update
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+    <script src="app.js"></script>
+</body>
+</html>

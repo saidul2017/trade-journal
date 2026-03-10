@@ -1,0 +1,4 @@
+# Static web project
+*.log
+.DS_Store
+Thumbs.db
