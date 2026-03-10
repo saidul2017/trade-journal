@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateDashboard();
     updateChecklistUI();
     setupCalculationListeners();
+    setupTableEventDelegation();
 });
 
 // ==================== TAB NAVIGATION ====================
@@ -256,8 +257,8 @@ function renderTradeTable() {
                 <td class="${checklistClass}">${trade.checklist === 'yes' ? '✅ Ya' : trade.checklist === 'no' ? '❌ Tidak' : '-'}</td>
                 <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis;">${sanitizeHTML(trade.notes) || '-'}</td>
                 <td>
-                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="openEditTradeModal('${sanitizeHTML(trade.id)}')">✏️</button>
-                    <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="deleteTrade('${sanitizeHTML(trade.id)}')">🗑️</button>
+                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" data-action="edit" data-id="${sanitizeHTML(trade.id)}">✏️</button>
+                    <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" data-action="delete" data-id="${sanitizeHTML(trade.id)}">🗑️</button>
                 </td>
             </tr>
         `;
@@ -288,6 +289,17 @@ function filterTrades() {
             (resultFilter === 'loss' && trade.pl !== null && trade.pl < 0);
 
         row.style.display = matchSearch && matchPair && matchDirection && matchResult ? '' : 'none';
+    });
+}
+
+function setupTableEventDelegation() {
+    document.getElementById('tradeTableBody').addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;
+        const action = btn.dataset.action;
+        const id = btn.dataset.id;
+        if (action === 'edit') openEditTradeModal(id);
+        else if (action === 'delete') deleteTrade(id);
     });
 }
 
